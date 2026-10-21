@@ -1,0 +1,9 @@
+{
+  "slug": "alpha",
+  "name": "Brand Alpha",
+  "from_name": "Alpha Team",
+  "from_email": "hello@alpha.example",
+  "sending_domain": "alpha.example",
+  "physical_address": "123 Alpha Street, Los Angeles, CA 90001",
+  "timezone": "America/Los_Angeles"
+}

@@ -1,0 +1,9 @@
+{
+  "slug": "beta",
+  "name": "Brand Beta",
+  "from_name": "Beta Team",
+  "from_email": "hello@beta.example",
+  "sending_domain": "beta.example",
+  "physical_address": "123 Beta Street, Los Angeles, CA 90001",
+  "timezone": "America/Los_Angeles"
+}

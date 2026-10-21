@@ -1,0 +1,9 @@
+Email address,First name,Last name,Email status,Email Lists,Company,Created At
+ Alice@Example.com ,Alice,Anders,Active,Starseed Newsletter;VIP,Acme,2023-04-01
+bob@example.com,Bob,,Unsubscribed,Starseed Newsletter,,2022-01-15
+carol@example.com,Carol,C,Bounced,,,
+dave@example.com,Dave,,Pending,,,
+not-an-email,X,,Active,,,
+alice@example.com,,Anders,Active,Workshop,,
+erin@example.com,Erin,,Spam Complaint,,,
+frank@example.com,Frank,,weird-status,,,

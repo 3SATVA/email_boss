@@ -1,0 +1,9 @@
+{
+  "key": "quiz",
+  "name": "Quiz signup",
+  "status": "active",
+  "trigger": { "type": "signup_source", "source": "quiz" },
+  "steps": [
+    { "key": "q1", "delay": "1h", "template": "welcome" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "key": "welcome",
+  "name": "Welcome series",
+  "status": "active",
+  "trigger": { "type": "tag_added", "tag": "lead" },
+  "exit_tags": ["customer"],
+  "steps": [
+    { "key": "s1", "delay": "0", "template": "welcome" },
+    { "key": "s2", "delay": "3d", "template": "followup" }
+  ]
+}

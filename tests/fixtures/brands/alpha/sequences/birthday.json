@@ -1,0 +1,9 @@
+{
+  "key": "birthday",
+  "name": "Birthday",
+  "status": "active",
+  "trigger": { "type": "date", "field": "birthday", "offset_days": 0, "annual": true },
+  "steps": [
+    { "key": "b1", "delay": "0", "template": "news" }
+  ]
+}
