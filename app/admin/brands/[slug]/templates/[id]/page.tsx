@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBrandBundle } from "@/lib/brands/registry";
 import { requireAdmin } from "@/lib/server/admin";
-import { renderEmail } from "@/lib/templates";
+import { samplePreview } from "@/lib/server/preview";
 
 export const dynamic = "force-dynamic";
 
@@ -13,15 +13,7 @@ export default async function TemplatePreview({ params }: { params: Promise<{ sl
   const bundle = getBrandBundle(slug);
   const tpl = bundle?.templates[id];
   if (!bundle || !tpl) notFound();
-  const rendered = renderEmail(tpl, bundle.partials, {
-    first_name: "Maya",
-    last_name: "Sample",
-    email: "maya@example.com",
-    custom: { fertility_type: "Kidney Yin Deficiency" },
-    brand: { name: bundle.config.name, from_name: bundle.config.from_name },
-    unsubscribe_url: "https://example.com/unsubscribe?t=preview",
-    physical_address: bundle.config.physical_address,
-  });
+  const rendered = samplePreview(bundle, id)!;
   const usedIn = bundle.sequences.filter((s) => s.steps.some((st) => st.template === id));
   return (
     <main>

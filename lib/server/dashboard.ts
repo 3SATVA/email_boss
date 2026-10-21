@@ -41,8 +41,8 @@ export async function loadBrandDetail(slug: string) {
       where e.brand_id = $1 order by e.occurred_at desc limit 50`,
     [brand.id],
   );
-  const broadcasts = await db.query<{ name: string; status: string; scheduled_at: Date | null; recipient_count: number | null; template_id: string }>(
-    `select name, status, scheduled_at, recipient_count, template_id from email_boss.broadcasts where brand_id = $1 order by created_at desc limit 20`,
+  const broadcasts = await db.query<{ id: string; name: string; status: string; scheduled_at: Date | null; recipient_count: number | null; template_id: string; segment: Record<string, unknown> }>(
+    `select id, name, status, scheduled_at, recipient_count, template_id, segment from email_boss.broadcasts where brand_id = $1 order by created_at desc limit 20`,
     [brand.id],
   );
   const queue = await db.query<{ status: string; n: number }>(
@@ -55,4 +55,26 @@ export async function loadBrandDetail(slug: string) {
 export function fmt(d: Date | string | null | undefined): string {
   if (!d) return "";
   return new Date(d).toLocaleString("en-US", { timeZone: "America/Los_Angeles", dateStyle: "medium", timeStyle: "short" }) + " PT";
+}
+
+export async function loadBroadcast(slug: string, id: string) {
+  if (!isDbConfigured() || !/^[0-9a-f-]{36}$/.test(id)) return null;
+  const db = getDb();
+  const [bc] = await db.query<{
+    id: string; brand_id: string; name: string; template_id: string; subject_override: string | null; segment: Record<string, unknown>;
+    status: string; scheduled_at: Date | null; materialized_at: Date | null; completed_at: Date | null; recipient_count: number | null; created_at: Date;
+  }>(
+    `select bc.* from email_boss.broadcasts bc join email_boss.brands b on b.id = bc.brand_id where b.slug = $1 and bc.id = $2`,
+    [slug, id],
+  );
+  if (!bc) return null;
+  const sends = await db.query<{ status: string; n: number }>(
+    `select status, count(*)::int as n from email_boss.sends where broadcast_id = $1 group by status order by status`, [id],
+  );
+  const events = await db.query<{ type: string; n: number; contacts: number }>(
+    `select e.type, count(*)::int as n, count(distinct e.contact_id)::int as contacts
+       from email_boss.events e join email_boss.sends s on s.id = e.send_id
+      where s.broadcast_id = $1 group by e.type order by e.type`, [id],
+  );
+  return { bc, sends, events };
 }

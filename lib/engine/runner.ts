@@ -6,6 +6,7 @@ import { renderEmail } from "../templates";
 import { oneClickUnsubscribeUrl, requireUnsubscribeSecret, signUnsubscribeToken, unsubscribeUrl } from "../tokens";
 import { chooseProviderName, defaultProviderResolver, formatFrom, PermanentSendError, type ProviderResolver } from "../providers";
 import { enrollContact } from "./contacts";
+import { segmentParams, segmentPredicate, type Segment } from "./broadcasts";
 import { addMinutes, dailyCap } from "./schedule";
 import type { BrandRow, ContactRow } from "./types";
 
@@ -179,15 +180,13 @@ export async function advanceEnrollments(db: Db, now: Date, summary: TickSummary
 
 /** Expand due broadcasts into one queued send per matching subscribed contact of that brand. */
 export async function materializeBroadcasts(db: Db, now: Date): Promise<number> {
-  const due = await db.query<{ id: string; brand_id: string; segment: { include_tags?: string[]; exclude_tags?: string[]; match?: string } }>(
+  const due = await db.query<{ id: string; brand_id: string; segment: Partial<Segment> }>(
     `select bc.id, bc.brand_id, bc.segment from email_boss.broadcasts bc join email_boss.brands b on b.id = bc.brand_id
       where bc.status = 'scheduled' and bc.scheduled_at <= $1::timestamptz and b.status = 'active'`,
     [now.toISOString()],
   );
   for (const bc of due) {
-    const include = (bc.segment.include_tags ?? []).map(String);
-    const exclude = (bc.segment.exclude_tags ?? []).map(String);
-    const matchAll = bc.segment.match === "all";
+    const [inc, exc, all] = segmentParams(bc.segment as Partial<Segment>);
     await db.transaction(async (tx) => {
       const locked = await tx.query(`select id from email_boss.broadcasts where id = $1 and status = 'scheduled' for update skip locked`, [bc.id]);
       if (!locked.length) return;
@@ -196,18 +195,9 @@ export async function materializeBroadcasts(db: Db, now: Date): Promise<number> 
          select bc.brand_id, c.id, 'broadcast', bc.id, bc.template_id, bc.subject_override, 50, $2::timestamptz
            from email_boss.broadcasts bc
            join email_boss.contacts c on c.brand_id = bc.brand_id and c.status = 'subscribed'
-          where bc.id = $1
-            and (
-              cardinality($3::text[]) = 0
-              or ($5::boolean and (select count(distinct t.name) from email_boss.contact_tags ct join email_boss.tags t on t.id = ct.tag_id
-                                    where ct.contact_id = c.id and t.name = any($3::text[])) = cardinality($3::text[]))
-              or (not $5::boolean and exists (select 1 from email_boss.contact_tags ct join email_boss.tags t on t.id = ct.tag_id
-                                    where ct.contact_id = c.id and t.name = any($3::text[])))
-            )
-            and not exists (select 1 from email_boss.contact_tags ct join email_boss.tags t on t.id = ct.tag_id
-                             where ct.contact_id = c.id and t.name = any($4::text[]))
+          where bc.id = $1 and ${segmentPredicate("$3", "$4", "$5")}
          on conflict (broadcast_id, contact_id) do nothing`,
-        [bc.id, now.toISOString(), pgArray(include), pgArray(exclude), matchAll],
+        [bc.id, now.toISOString(), inc, exc, all],
       );
       await tx.query(
         `update email_boss.broadcasts set status = 'sending', materialized_at = $2::timestamptz,

@@ -5,6 +5,7 @@ import { formatDelay } from "@/lib/engine/schedule";
 import { requireAdmin } from "@/lib/server/admin";
 import { fmt, loadBrandDetail } from "@/lib/server/dashboard";
 import type { SequenceTrigger } from "@/lib/brands/schema";
+import { describeSegment } from "@/lib/engine/broadcasts";
 
 export const dynamic = "force-dynamic";
 
@@ -75,8 +76,8 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
 
           <h2>Broadcasts</h2>
           <table className="grid"><thead><tr><th>Name</th><th>Template</th><th>Status</th><th>Scheduled</th><th>Recipients</th></tr></thead>
-            <tbody>{detail.broadcasts.map((b, i) => (
-              <tr key={i}><td>{b.name}</td><td>{b.template_id}</td><td><span className={`pill ${b.status}`}>{b.status}</span></td><td>{fmt(b.scheduled_at)}</td><td>{b.recipient_count ?? ""}</td></tr>
+            <tbody>{detail.broadcasts.map((b) => (
+              <tr key={b.id}><td><Link href={`/admin/brands/${slug}/broadcasts/${b.id}`}>{b.name}</Link><div className="muted">{describeSegment(b.segment)}</div></td><td>{b.template_id}</td><td><span className={`pill ${b.status}`}>{b.status}</span></td><td>{fmt(b.scheduled_at)}</td><td>{b.recipient_count ?? ""}</td></tr>
             ))}</tbody></table>
 
           <h2>Recent sends</h2>
