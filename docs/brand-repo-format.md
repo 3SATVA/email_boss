@@ -8,8 +8,7 @@ build time (`npm run manifest`) and syncs the sequence definitions into the data
 ## Folder layout
 
 Put one folder per brand, named exactly like the brand slug. In a brand repo we suggest
-`email/<slug>/` (e.g. `3SATVA/susana/email/yonisync/`). The local example lives in
-[`brands/yonisync`](../brands/yonisync).
+`email/<slug>/` (e.g. `3SATVA/susana/email/yonisync/`). Vendored copies live in [`brands/`](../brands).
 
 ```
 <slug>/
@@ -39,8 +38,7 @@ Folder names starting with `_` or `.` are ignored.
   "physical_address": "123 Example St, Suite 4, Los Angeles, CA 90001",
   "timezone": "America/Los_Angeles",
   "ses_configuration_set": "yonisync-marketing",
-  "provider": "ses",
-  "links_base_url": "https://email-boss.vercel.app"
+  "provider": "ses"
 }
 ```
 
@@ -53,7 +51,7 @@ Folder names starting with `_` or `.` are ignored.
 | `timezone` | no | the warm-up "day" and date triggers use this timezone |
 | `ses_configuration_set` | no | per-brand SES configuration set (events -> SNS) |
 | `provider` | no | `ses` / `resend` / `log`; defaults to `EMAIL_PROVIDER` |
-| `links_base_url` | no | host for unsubscribe links; defaults to `PUBLIC_BASE_URL` |
+| `links_base_url` | no | host for unsubscribe links; defaults to `PUBLIC_BASE_URL`. Only set it to a host that serves email_boss (`/unsubscribe` and `/api/unsubscribe`), e.g. a custom domain on the email_boss project, otherwise every unsubscribe link breaks |
 
 ## Templates
 
@@ -117,11 +115,16 @@ Preview locally: `npm run preview -- yonisync quiz-welcome` writes an HTML file,
 
 ## Wiring a brand repo into email_boss
 
-Until the brand repos are wired in, copy the brand folder into `email_boss/brands/`. The intended
-setup once the brand repos have an `email/` folder:
+1. Add the brand to `brands.sources.json` in email_boss:
+   ```json
+   { "brands": { "yonisync": { "repo": "3SATVA/susana", "path": "emails/yonisync", "ref": "main" } } }
+   ```
+   `ref` can be a branch, tag or commit; pin a commit (as for Starseed) if the branch moves without review.
+2. `npm run brands:pull -- yonisync` downloads the folder at the resolved commit, validates it (same checks as the
+   build), and replaces `brands/yonisync/`, writing `brands/yonisync/.source.json` with the exact commit.
+   An invalid folder never replaces the vendored copy.
+3. Commit `brands/` and deploy. The Vercel build only reads the vendored copy, so it needs no GitHub access.
+4. `npm run brands:sync-db` updates sequences in the database.
 
-1. In the Vercel project for email_boss, add a build step that checks out the brand repos
-   (e.g. `git clone --depth 1 https://x-access-token:$BRAND_REPO_TOKEN@github.com/3SATVA/susana .brands/susana`)
-   and set `BRANDS_DIRS=brands:.brands/susana/email`.
-2. A push to a brand repo triggers an email_boss redeploy via a Vercel deploy hook.
-3. After deploy, run `npm run brands:sync-db` (or add it to the build) to update sequences.
+`npm run brands:pull -- --check` reports which vendored copies are behind their ref.
+Don't edit `brands/<slug>/` in email_boss by hand; change the brand repo and pull.

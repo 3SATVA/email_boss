@@ -90,7 +90,8 @@ app/
   api/cron/tick/route.ts        scheduler pass (Vercel Cron, Bearer CRON_SECRET)
   api/admin/{login,logout}      dashboard session (ADMIN_PASSWORD)
   unsubscribe/                  confirm page + done page
-  admin/                        read-only dashboard: brands, automations flow, template previews, sends, events
+  admin/                        read-only dashboard: brands, automations flow, template previews,
+                                broadcasts (audience, progress, preview), sends, events
 lib/
   db.ts                         tiny Db interface (postgres.js in prod, PGlite in tests)
   tokens.ts                     unsubscribe tokens, brand API keys, admin session
@@ -104,8 +105,10 @@ lib/
   engine/sync.ts                brand settings + sequences -> DB
   import/csv.ts                 CSV parsing + safe import
   providers/                    ses.ts (SESv2), resend.ts, log.ts (dry run), index.ts (safety switch)
-brands/yonisync/                example brand folder (format: docs/brand-repo-format.md)
-scripts/                        build-manifest, sync-brands-to-db, brand-key, import-csv, preview-template
+brands/<slug>/                  vendored brand folders (yonisync, starseed) + .source.json (pulled, don't edit here)
+brands.sources.json             where each brand folder comes from (repo / path / ref)
+scripts/                        brands-pull, build-manifest, sync-brands-to-db, brand-key, import-csv,
+                                broadcast-create, test-send, report-inactive, preview-template
 supabase/migrations/            schema
 tests/                          vitest + PGlite (real Postgres in memory)
 docs/                           brand-repo-format.md, scheduler.md
@@ -115,17 +118,59 @@ docs/                           brand-repo-format.md, scheduler.md
 
 ```bash
 npm install
-npm test                         # 49 tests: tokens, isolation, scheduling, import, webhooks, templates
-npm run build                    # compiles brands -> lib/generated/manifest.json, then next build
+npm test                         # 66 tests (in-memory Postgres): tokens, isolation, scheduling, broadcasts, import, webhooks, ...
+npm run build                    # compiles brands/ -> lib/generated/manifest.json, then next build
 npm run brands:validate          # check brand folders (merge-tag typos, missing footer, ...)
-npm run preview -- yonisync quiz-welcome        # render a template to an .html file
-
-# need SUPABASE_DB_URL:
-npm run brands:sync-db           # upsert brands + sequences from the manifest
-npm run brand:key -- yonisync    # create/rotate the brand's API key (printed once)
-npm run import:csv -- --brand starseed --file starseed.csv --source constant_contact --tag imported:cc   # dry run
-npm run import:csv -- ... --commit
+npm run preview -- yonisync quiz-01-lets-understand-your-fertility-type   # render a template to an .html file
 ```
+
+| command | what it does | needs DB |
+|---|---|---|
+| `npm run brands:pull [-- <slug>]` | Downloads each brand folder listed in `brands.sources.json` from its brand repo (GitHub API, `GH_TOKEN` / `GITHUB_TOKEN` / `gh auth token`), validates it, and replaces `brands/<slug>/`, recording the exact source commit in `brands/<slug>/.source.json`. Commit the result. | no |
+| `npm run brands:pull -- --check` | Says whether each vendored copy matches its ref (exit 1 if any is behind). | no |
+| `npm run brands:sync-db` | Upserts brand settings + sequences from the manifest into the DB. | yes |
+| `npm run brand:key -- <slug>` | Creates/rotates the brand's API key for `/api/subscribe` (printed once, only the hash is stored). | yes |
+| `npm run test-send -- --brand <slug> --template <id> --to <email>` | Renders the real email (brand sender, partials, footer) with a `[TEST]` subject to an address in `TEST_RECIPIENTS`. Default provider `log`: nothing is sent, the HTML is written to `.test-sends/`. `--provider ses\|resend` sends for real but also requires `SEND_ENABLED=true`. Options: `--first-name`, `--custom key=value`. | no |
+| `npm run broadcast:create -- --brand <slug> --template <id> --audience "<filter>"` | One-off newsletter. Dry run by default: validates the template, shows the subject, recipient count, suppressed count, unknown tags (typo check) and today's warm-up cap. `--commit` saves it as a draft, or `--schedule <ISO>\|now` to send. Also `--exclude`, `--subject`, `--name`. | for counts |
+| `npm run import:csv -- --brand <slug> --file <csv> --source <name>` | Dry-run import with aggregate counts only (never prints contact data). Auto-detects systeme.io and Constant Contact exports (`--format` to force). `--tag`, `--suppress-tag`, `--map field=Column`, `--no-custom`, `--commit`. | for `--commit` |
+| `npm run report:inactive -- --brand <slug> --days 365` | Cleanup report: subscribed contacts engaged / inactive / too early to judge / never emailed. `--tag inactive:365d --commit` tags the inactive ones so broadcasts can `--exclude` them. | yes |
+
+### Audience filters (broadcasts)
+
+| filter | who |
+|---|---|
+| `"*"` | everyone subscribed in that brand |
+| `"quiz,webinar-email-collected"` | has **any** of these tags |
+| `"all:vip,expo-2026"` | has **all** of these tags |
+| `--exclude "customer,inactive:365d"` | ...and none of these |
+
+Unsubscribed, bounced and complained contacts are never included. A broadcast bigger than the day's
+warm-up cap continues the next day. Cancel one with
+`update email_boss.broadcasts set status = 'canceled' where id = '...'` (a trigger cancels its queued emails).
+The dashboard (`/admin/brands/<slug>/broadcasts/<id>`) shows audience, progress, engagement and a preview.
+
+### Brand content comes from the brand repos
+
+Each brand repo owns its emails (`3SATVA/susana` -> `emails/yonisync/`, `3SATVA/Starseed-Quest-3` -> `brands/starseed/`).
+`brands.sources.json` maps slug -> repo/path/ref. `npm run brands:pull` vendors the folders into `brands/`
+with the source commit recorded, and you commit that, so the Vercel build never needs access to the
+(private) brand repos and every deploy is reproducible. Michael edits emails by asking the AI in chat: it
+edits the brand repo, then re-pulls here and redeploys. No editing UI needed.
+
+### Importing lists
+
+* **systeme.io** (`Email, First name, Last name, ..., Country, Phone number, Tag, Date Registered`): `Tag`
+  (comma-separated) becomes lowercase tags (`Webinar Email Collected` -> `webinar-email-collected`),
+  `Date Registered` ("2026-02-16 18:26:17 (UTC-8)") becomes the consent date, other non-empty columns become
+  custom fields. The export has **no unsubscribe/bounce column**: make sure unsubscribed contacts are excluded
+  from the export, or pass `--suppress-tag <tag>` for a tag that marks them.
+* **Constant Contact** (`Email address, First name, Last name, Email permission status, Email Opt-in Date,
+  Email Opt-out Date, Email Lists, Tags, Source Name, Created At, ...`): permission `Permitted`/`Explicit`/`Implicit`
+  -> subscribed; `Unsubscribed`/`Removed` or any opt-out date -> unsubscribed; `Bounced` -> bounced;
+  `Not set` (never gave permission) -> unsubscribed and counted as "no permission"; `Pending confirmation`
+  -> skipped. List memberships and tags both become tags. Prefer Constant Contact's "all contacts" export,
+  which includes unsubscribed contacts, so they stay suppressed here.
+* Imports never trigger sequences and never re-activate an unsubscribed/bounced/complained contact.
 
 ## Subscribe API
 
@@ -166,6 +211,8 @@ See [`.env.example`](.env.example).
 | `SES_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | for SES | IAM user allowed only `ses:SendEmail` |
 | `SNS_TOPIC_ARNS` | for SES | comma-separated SNS topic ARNs allowed to call the webhook |
 | `RESEND_API_KEY` | for Resend | |
+| `RESEND_WEBHOOK_SECRET` | for Resend | `whsec_...` signing secret of the webhook pointing at `/api/webhooks/resend` |
+| `TEST_RECIPIENTS` | for test sends | comma-separated allowlist for `npm run test-send` |
 | `SEND_RATE_PER_SECOND` | no | default 1 (SES sandbox). Set to your SES max send rate |
 | `SEND_BATCH_LIMIT`, `SEND_TIME_BUDGET_MS` | no | per-run limits (defaults 200 / 45s) |
 | `BRANDS_DIRS` | no | `:`-separated roots of brand folders compiled at build (default `brands`) |
@@ -254,12 +301,22 @@ That's roughly **$15-40/month** for all three brands, compared with roughly $400
 
 ## Scheduler
 
-`vercel.json` runs `/api/cron/tick` once a day (the most Vercel Hobby allows). For quiz welcome
-emails within minutes, use Supabase pg_cron (free) or Vercel Pro. See [docs/scheduler.md](docs/scheduler.md).
+Two layers, both calling `/api/cron/tick` (idempotent, overlapping runs are safe):
 
-## Not in v1 (next steps)
+1. **Supabase pg_cron + pg_net, every minute, free (recommended).** Opt-in: the migration only adds helper
+   functions. After enabling the two extensions, run once in the Supabase SQL editor:
+   ```sql
+   select vault.create_secret('<same value as CRON_SECRET>', 'email_boss_cron_secret');
+   select email_boss.enable_cron_tick('https://<deployment>/api/cron/tick');   -- '* * * * *' by default
+   -- off again: select email_boss.disable_cron_tick();
+   ```
+   The secret stays in Supabase Vault; neither the URL nor the secret is hard-coded in git.
+2. **Vercel Cron, once a day** (`vercel.json`, the Hobby-plan limit), as a fallback.
 
-* Wiring brand repos in at build (`BRANDS_DIRS` + deploy hooks), per [docs/brand-repo-format.md](docs/brand-repo-format.md).
-* A broadcast-creation script/UI (the table + sending logic exist; create rows with SQL for now).
-* Resend webhooks (SES webhooks are done), double opt-in, preference center, an events retention job.
-* Re-creating the systeme.io / Constant Contact automations as sequence files.
+Details and alternatives: [docs/scheduler.md](docs/scheduler.md).
+
+## Not built yet (next steps)
+
+* A preference center (per-topic opt-outs) and double opt-in for public forms.
+* An events retention job (prune old open/click events to stay in Supabase's free 500 MB).
+* Wiring the Starseed quiz (Quest repo) and Expo forms to `/api/subscribe`.

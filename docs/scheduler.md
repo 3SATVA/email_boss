@@ -16,27 +16,26 @@ minutes, so use pg_cron (or Pro) before launching welcome series.
 
 ## Supabase pg_cron + pg_net
 
-Run in the Supabase SQL editor (Database > Extensions: enable `pg_cron` and `pg_net` first).
-Store the secret in Vault rather than inline:
+Migration `20261021210000_cron_tick_helpers.sql` adds `email_boss.enable_cron_tick(url, schedule)` and
+`email_boss.disable_cron_tick()`; it schedules nothing by itself. To turn it on:
 
-```sql
-select vault.create_secret('<CRON_SECRET>', 'email_boss_cron_secret');
+1. Supabase dashboard > Database > Extensions: enable **pg_cron** and **pg_net**.
+2. SQL editor:
+   ```sql
+   -- the same value as CRON_SECRET in the Vercel project
+   select vault.create_secret('<CRON_SECRET>', 'email_boss_cron_secret');
+   select email_boss.enable_cron_tick('https://<your-deployment>/api/cron/tick');          -- every minute
+   -- or: select email_boss.enable_cron_tick('https://<your-deployment>/api/cron/tick', '*/5 * * * *');
+   ```
+3. Check it: `select * from cron.job_run_details order by start_time desc limit 5;` and
+   `select status_code, created from net._http_response order by created desc limit 5;` (expect 200).
 
-select cron.schedule(
-  'email-boss-tick',
-  '*/2 * * * *',
-  $$
-  select net.http_get(
-    url := 'https://<your-deployment>/api/cron/tick',
-    headers := jsonb_build_object(
-      'Authorization',
-      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'email_boss_cron_secret')
-    ),
-    timeout_milliseconds := 60000
-  );
-  $$
-);
-```
+The job reads the secret from Vault at run time, so it never appears in `cron.job`. Turn it off with
+`select email_boss.disable_cron_tick();`. Rotating `CRON_SECRET`: update both Vercel and
+`select vault.update_secret((select id from vault.secrets where name = 'email_boss_cron_secret'), '<new>');`.
+
+Cost: free. pg_cron/pg_net are included in every Supabase plan, and a 1-minute tick is about 43k tiny
+function invocations a month, well inside Vercel Hobby's included usage.
 
 ## GitHub Actions
 
