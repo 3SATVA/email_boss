@@ -1,0 +1,11 @@
+{
+  "slug": "yonisync",
+  "name": "YoniSync",
+  "from_name": "Susana Puelles, L.Ac.",
+  "from_email": "hello@yonisync.com",
+  "reply_to": "hello@yonisync.com",
+  "sending_domain": "yonisync.com",
+  "physical_address": "REPLACE_ME: YoniSync business mailing address (street or PO box, city, state, ZIP)",
+  "timezone": "America/Los_Angeles",
+  "ses_configuration_set": "yonisync-marketing"
+}
