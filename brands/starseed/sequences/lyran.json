@@ -1,0 +1,17 @@
+{
+  "key": "starseed-lyran",
+  "name": "Starseed Quest: Lyran result email",
+  "description": "Sends the Lyran report once, when the quiz tags a contact starseed-type:lyran.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:lyran"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "lyran"
+    }
+  ]
+}

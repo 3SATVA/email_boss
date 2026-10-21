@@ -1,0 +1,17 @@
+{
+  "key": "starseed-sirian",
+  "name": "Starseed Quest: Sirian result email",
+  "description": "Sends the Sirian report once, when the quiz tags a contact starseed-type:sirian.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:sirian"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "sirian"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "key": "fertility-webinar-signed-up",
+  "name": "Fertility Webinar Signed Up",
+  "description": "Replica of systeme.io campaign 'Fertility Webinar Signed Up'. systeme rules #1 and #5 map to adding the enrollment tag seq:fertility-webinar-signed-up. Delays are after the previous email (first email 1 minute after signup).",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "seq:fertility-webinar-signed-up"
+  },
+  "steps": [
+    {
+      "key": "email-01",
+      "delay": "1m",
+      "template": "webinar-01-youre-in-get-ready-to-rethink-your-ferti"
+    },
+    {
+      "key": "email-02",
+      "delay": "1h",
+      "template": "webinar-02-welcome-to-yoni-sync-im-so-glad-youre-he"
+    },
+    {
+      "key": "email-03",
+      "delay": "1d",
+      "template": "webinar-03-your-fertility-type-could-change-everyth"
+    },
+    {
+      "key": "email-04",
+      "delay": "2d",
+      "template": "webinar-04-you-like-freebies-right-then-why-havent"
+    },
+    {
+      "key": "email-05",
+      "delay": "1d",
+      "template": "webinar-05-change-can-happen-when-you-tap-into-your"
+    },
+    {
+      "key": "email-06",
+      "delay": "3d",
+      "template": "webinar-06-the-clues-your-period-reveals"
+    },
+    {
+      "key": "email-07",
+      "delay": "3d",
+      "template": "webinar-07-why-your-fertility-isnt-the-problem-the"
+    },
+    {
+      "key": "email-08",
+      "delay": "1d",
+      "template": "webinar-08-shannon-was-done-believing-in-luck"
+    },
+    {
+      "key": "email-09",
+      "delay": "4d",
+      "template": "webinar-09-why-ivf-fails-even-when-youre-doing-ever"
+    },
+    {
+      "key": "email-10",
+      "delay": "2d",
+      "template": "webinar-10-let-s-solve-50-of-the-fertility-mystery"
+    },
+    {
+      "key": "email-11",
+      "delay": "6d",
+      "template": "webinar-11-the-proof-is-in-the-womb"
+    }
+  ]
+}

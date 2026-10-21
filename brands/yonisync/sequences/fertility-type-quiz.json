@@ -1,0 +1,37 @@
+{
+  "key": "fertility-type-quiz",
+  "name": "Fertility Type Quiz",
+  "description": "Replica of systeme.io campaign 'Fertiilty Type Quiz' (id 1034784). No systeme automation rule subscribes contacts to it; here it starts when the YoniSync quiz adds the tag seq:fertility-type-quiz (sent on every quiz completion, so existing contacts who retake the quiz get it too; a tag only triggers once per contact).",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "seq:fertility-type-quiz"
+  },
+  "steps": [
+    {
+      "key": "email-01",
+      "delay": "0",
+      "template": "quiz-01-lets-understand-your-fertility-type"
+    },
+    {
+      "key": "email-02",
+      "delay": "1d",
+      "template": "quiz-02-why-your-results-may-show-multiple-types"
+    },
+    {
+      "key": "email-03",
+      "delay": "2d",
+      "template": "quiz-03-the-first-3-steps-i-recommend-for-every"
+    },
+    {
+      "key": "email-04",
+      "delay": "2d",
+      "template": "quiz-04-90-days-from-now-could-look-very-differe"
+    },
+    {
+      "key": "email-05",
+      "delay": "1d",
+      "template": "quiz-05-why-ivf-often-fails-and-its-not-your-fau"
+    }
+  ]
+}

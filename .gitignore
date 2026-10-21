@@ -12,3 +12,5 @@ lib/generated/
 !tests/fixtures/*.csv
 coverage
 preview-*.html
+.test-sends
+.tmp-pull-*

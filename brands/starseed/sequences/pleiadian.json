@@ -1,0 +1,17 @@
+{
+  "key": "starseed-pleiadian",
+  "name": "Starseed Quest: Pleiadian result email",
+  "description": "Sends the Pleiadian report once, when the quiz tags a contact starseed-type:pleiadian.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:pleiadian"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "pleiadian"
+    }
+  ]
+}

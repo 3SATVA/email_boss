@@ -1,0 +1,17 @@
+{
+  "key": "starseed-orion",
+  "name": "Starseed Quest: Orion result email",
+  "description": "Sends the Orion report once, when the quiz tags a contact starseed-type:orion.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:orion"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "orion"
+    }
+  ]
+}

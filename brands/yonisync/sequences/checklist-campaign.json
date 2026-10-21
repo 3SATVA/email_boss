@@ -1,0 +1,27 @@
+{
+  "key": "checklist-campaign",
+  "name": "Checklist Campaign",
+  "description": "Replica of systeme.io campaign 'Checklist Campaign' (id 1091223). systeme rules #2 and #4 ('Subscribe to campaign') map to adding the enrollment tag seq:checklist-campaign. Delays are after the previous email.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "seq:checklist-campaign"
+  },
+  "steps": [
+    {
+      "key": "email-01",
+      "delay": "0",
+      "template": "checklist-01-download-your-checklist"
+    },
+    {
+      "key": "email-02",
+      "delay": "1d",
+      "template": "checklist-02-your-body-really-cares-about-this"
+    },
+    {
+      "key": "email-03",
+      "delay": "2d",
+      "template": "checklist-03-if-you-want-results-not-more-advice"
+    }
+  ]
+}

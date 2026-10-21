@@ -1,0 +1,17 @@
+{
+  "key": "starseed-arcturian",
+  "name": "Starseed Quest: Arcturian result email",
+  "description": "Sends the Arcturian report once, when the quiz tags a contact starseed-type:arcturian.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:arcturian"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "arcturian"
+    }
+  ]
+}

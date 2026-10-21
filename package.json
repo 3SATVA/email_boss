@@ -14,7 +14,11 @@
     "brands:sync-db": "tsx scripts/sync-brands-to-db.ts",
     "brand:key": "tsx scripts/brand-key.ts",
     "import:csv": "tsx scripts/import-csv.ts",
-    "preview": "tsx scripts/preview-template.ts"
+    "preview": "tsx scripts/preview-template.ts",
+    "brands:pull": "tsx scripts/brands-pull.ts",
+    "broadcast:create": "tsx scripts/broadcast-create.ts",
+    "test-send": "tsx scripts/test-send.ts",
+    "report:inactive": "tsx scripts/report-inactive.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1155.0",

@@ -1,0 +1,11 @@
+{
+  "slug": "starseed",
+  "name": "Starseed Quest",
+  "from_name": "Starseed Quest",
+  "from_email": "hello@starseed.quest",
+  "reply_to": "tres@3satva.com",
+  "sending_domain": "starseed.quest",
+  "physical_address": "P.O. Box 20178, Long Beach, CA 90802",
+  "timezone": "America/Los_Angeles",
+  "ses_configuration_set": "starseed-marketing"
+}

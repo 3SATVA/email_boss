@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { htmlToText, parseFrontMatter, renderEmail, validateFooter, validateTemplate } from "@/lib/templates";
 import { loadBrandDir } from "@/lib/brands/load";
 import path from "node:path";
+import { readSourceRecord } from "@/lib/brands/pull";
 
 const partials = { footer: `<p>{{physical_address}} <a href="{{unsubscribe_url}}">Unsubscribe</a></p>` };
 const vars = {
@@ -51,9 +52,15 @@ describe("templates", () => {
     expect(t).toBe("Hello there\n\nbye");
   });
 
-  it("the example yonisync brand folder is valid", () => {
-    const b = loadBrandDir(path.resolve("brands/yonisync"));
-    expect(Object.keys(b.templates).sort()).toEqual(["quiz-day2", "quiz-day5", "quiz-welcome"]);
-    expect(b.sequences[0].steps.map((s) => s.delay)).toEqual([0, 2880, 4320]);
+  it("every vendored brand folder is valid and records its source commit", () => {
+    for (const slug of ["yonisync", "starseed"]) {
+      const b = loadBrandDir(path.resolve("brands", slug));
+      expect(b.config.slug).toBe(slug);
+      expect(Object.keys(b.templates).length).toBeGreaterThan(0);
+      expect(b.sequences.every((s) => s.status === "paused")).toBe(true);
+      expect(readSourceRecord(path.resolve("brands", slug))?.commit).toMatch(/^[0-9a-f]{40}$/);
+      // unsubscribe links must point at email_boss, not another site
+      expect(b.config.links_base_url).toBeUndefined();
+    }
   });
 });

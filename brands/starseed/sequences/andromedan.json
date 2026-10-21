@@ -1,0 +1,17 @@
+{
+  "key": "starseed-andromedan",
+  "name": "Starseed Quest: Andromedan result email",
+  "description": "Sends the Andromedan report once, when the quiz tags a contact starseed-type:andromedan.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "starseed-type:andromedan"
+  },
+  "steps": [
+    {
+      "key": "report",
+      "delay": "0",
+      "template": "andromedan"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "$comment": "Where each brand's email content lives. `npm run brands:pull` vendors these folders into brands/<slug>/ and records the source commit in brands/<slug>/.source.json. `ref` can be a branch, tag or commit SHA; pin a SHA for reproducible builds.",
+  "brands": {
+    "yonisync": { "repo": "3SATVA/susana", "path": "emails/yonisync", "ref": "main" },
+    "starseed": { "repo": "3SATVA/Starseed-Quest-3", "path": "brands/starseed", "ref": "30e3f74" }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "key": "yoni-flow-welcome",
+  "name": "Yoni Flow Formula: purchase welcome",
+  "description": "Replica of the systeme.io standalone email 'You're in! Let's unlock your hormonal flow' sent by workflow 'Purchased Yoni Flow' (420254) and rules #6, #7, #12. Starts when the enrollment tag seq:yoni-flow-welcome is added (on sale, or the Yoni Flow sales-page form). One send per contact (no re-enroll), whereas systeme could send it more than once when several rules fire.",
+  "status": "paused",
+  "trigger": {
+    "type": "tag_added",
+    "tag": "seq:yoni-flow-welcome"
+  },
+  "steps": [
+    {
+      "key": "welcome",
+      "delay": "0",
+      "template": "yoniflow-01-youre-in-lets-unlock-your-hormonal-flow"
+    }
+  ]
+}
