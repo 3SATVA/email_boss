@@ -1,0 +1,24 @@
+:root { --ink:#2d2430; --muted:#76687a; --line:#e8dfe6; --bg:#faf7f9; --accent:#7d5a73; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+a { color: var(--accent); }
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 22px; margin: 0 0 16px; } h2 { font-size: 17px; margin: 28px 0 10px; }
+table.grid { width:100%; border-collapse: collapse; background:#fff; border:1px solid var(--line); border-radius:8px; font-size:14px; }
+table.grid th, table.grid td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align: top; }
+table.grid th { font-weight:600; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.muted { color: var(--muted); font-size: 13px; }
+.pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#efe7ee; }
+.pill.active, .pill.sent, .pill.subscribed, .pill.delivered { background:#e2f3e7; }
+.pill.paused, .pill.queued { background:#fdf3d8; }
+.pill.failed, .pill.bounce, .pill.complaint, .pill.bounced, .pill.complained { background:#fbe1e1; }
+.flow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 16px; }
+.node { background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:13px; }
+.node.trigger { background:#f3ecf2; }
+.arrow { color: var(--muted); font-size: 12px; }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom: 16px; }
+.warn { background:#fff6e0; border:1px solid #f0d58a; padding:10px 12px; border-radius:8px; font-size:14px; }
+header.top { display:flex; justify-content:space-between; align-items:center; padding: 12px 24px; border-bottom:1px solid var(--line); background:#fff; }
+button, input[type=password] { font: inherit; padding: 8px 12px; border-radius: 6px; border:1px solid var(--line); }
+button { background: var(--accent); color:#fff; border-color: var(--accent); cursor:pointer; }
+.center { max-width: 460px; margin: 10vh auto; text-align:center; }
